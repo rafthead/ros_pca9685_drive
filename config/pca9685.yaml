@@ -1,0 +1,18 @@
+drive_servos:
+    topic_drive: /joy/cmd_vel
+    topic_absolute: /servos_raw
+    pwm_frequency: 50
+   
+    i2c_bus: 1
+    i2c_base_address: 0x40
+    steering:
+        channel: 0
+        center: 310
+        direction: 1 
+        range: 120
+
+    throttle:
+        channel: 1
+        center: 300
+        direction: 1
+        range: 120
