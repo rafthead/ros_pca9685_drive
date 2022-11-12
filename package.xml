@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>ros_pca9685_drive</name>
+  <version>0.0.1</version>
+  <description>The ros_pca9685_drive package to control the steering and throttling signals sent from the Adafruit PCA9685 board.</description>
+  <maintainer email="wteric@hotmail.com">Eric Wang</maintainer>
+  <license>BSD</license>
+  <author email="wteric@hotmail.com">Eric Wang</author> -->
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>message_runtime</depend>
+</package>
