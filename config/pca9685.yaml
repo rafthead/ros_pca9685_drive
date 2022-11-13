@@ -15,4 +15,4 @@ drive_servos:
         channel: 1
         center: 300
         direction: 1
-        range: 120
+        range: 56

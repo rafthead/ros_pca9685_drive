@@ -7,6 +7,7 @@
 # Software License Agreement (BSD License 2.0)
 #
 import sys
+import time
 import Jetson.GPIO as GPIO
 from pca9685_driver import Device
 
@@ -52,15 +53,18 @@ class PCA9685_Drive_Node():
                 raise PCA9685DriveException("Missing configuration for 'drive_servos/{}'.".format(key))
             self.servos_config[key] = Servo_Config(key, params[key])
 
-        # Subscribe to the topics 
-        rospy.Subscriber(self.topic_drive, Twist, self.drive_callback)
-        rospy.Subscriber(self.topic_absolute, Servos, self.servos_callback)
-
-        # Initialize the I2C PCA9685 device driver and reset servos
+        # Initialize the I2C PCA9685 device driver and reset servos to the center position
         GPIO.setmode(GPIO.BOARD)
         self.device = Device(self.i2c_baseAddr, self.i2c_bus)
         self.device.wake()
         self.device.set_pwm_frequency(self.pwm_frequency)
+        self.forwarded = False
+        self.setPWM(self.servos_config['steering'].channel, self.servos_config['steering'].center)
+        self.setPWM(self.servos_config['throttle'].channel, self.servos_config['throttle'].center)
+
+        # Subscribe to the topics 
+        rospy.Subscriber(self.topic_drive, Twist, self.drive_callback)
+        rospy.Subscriber(self.topic_absolute, Servos, self.servos_callback)
 
     def drive_callback(self, twist_data):
         # Set throttling
@@ -82,18 +86,30 @@ class PCA9685_Drive_Node():
                 continue
             pwm = int(servos_data.value[i])
             p = self.setPWM(servoConfig.channel, pwm)
-            rospy.loginfo("Directly set PWM value on servo %s: %d", servo, p)
 
     def drive_SetPWM(self, servo, value):
         servoConfig = self.servos_config[servo]
         v = max(min(value, 1.0), -1.0)
         pwm = int(servoConfig.center + servoConfig.direction * v * servoConfig.range / 2.0)
         p = self.setPWM(servoConfig.channel, pwm)
-        rospy.loginfo("Servo %s: value %.3f, PWM %d", servo, value, p)
     
     def setPWM(self, channel, pwm):
         try:
             p = max(min(pwm, 4095), 0)
+
+            # ESC requires resetting the center PWM value before reverse
+            servo_throttle = self.servos_config['throttle']
+            if channel == servo_throttle.channel:
+                if p < servo_throttle.center:
+                    if self.forwarded:
+                        self.device.set_pwm(channel, int(servo_throttle.center - servo_throttle.range/4))
+                        time.sleep(0.05)
+                        self.device.set_pwm(channel, servo_throttle.center)
+                        time.sleep(0.05)
+                    self.forwarded = False
+                elif p > servo_throttle.center:
+                    self.forwarded = True
+
             self.device.set_pwm(channel, p)
             return p
         except Exception as e:
@@ -106,6 +122,4 @@ if __name__ == "__main__":
         rospy.spin()
     except PCA9685DriveException as e:
         rospy.logfatal(e)
-    if node and node.device:
-        node.device.sleep()
 

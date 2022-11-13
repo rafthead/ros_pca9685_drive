@@ -11,7 +11,7 @@ teleop:
         scale: 1
         offset: 0
       -
-        axis: 3
+        axis: 0
         target: angular.z
         scale: 1
         offset: 0
