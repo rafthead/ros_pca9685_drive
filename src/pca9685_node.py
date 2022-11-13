@@ -86,14 +86,12 @@ class PCA9685_Drive_Node():
                 continue
             pwm = int(servos_data.value[i])
             p = self.setPWM(servoConfig.channel, pwm)
-            rospy.loginfo("Directly set PWM value on servo %s: %d", servo, p)
 
     def drive_SetPWM(self, servo, value):
         servoConfig = self.servos_config[servo]
         v = max(min(value, 1.0), -1.0)
         pwm = int(servoConfig.center + servoConfig.direction * v * servoConfig.range / 2.0)
         p = self.setPWM(servoConfig.channel, pwm)
-        rospy.loginfo("Servo %s: value %.3f, PWM %d, forwarded: %s", servo, value, p, self.forwarded)
     
     def setPWM(self, channel, pwm):
         try:
@@ -104,8 +102,7 @@ class PCA9685_Drive_Node():
             if channel == servo_throttle.channel:
                 if p < servo_throttle.center:
                     if self.forwarded:
-                        rospy.loginfo("Rese PWM value to reverse.")
-                        self.device.set_pwm(channel, int(servo_throttle.center - servo_throttle.range/8))
+                        self.device.set_pwm(channel, int(servo_throttle.center - servo_throttle.range/4))
                         time.sleep(0.05)
                         self.device.set_pwm(channel, servo_throttle.center)
                         time.sleep(0.05)

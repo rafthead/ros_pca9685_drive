@@ -8,7 +8,7 @@ teleop:
       -
         axis: 1
         target: linear.x
-        scale: 0.45
+        scale: 1
         offset: 0
       -
         axis: 0
